@@ -142,7 +142,7 @@ load_ntr_statuses()
     "astrbot_plugin_animewifex",
     "monbed",
     "群二次元老婆插件修改版",
-    "1.7.3",
+    "1.7.4",
     "https://github.com/monbed/astrbot_plugin_animewifex",
 )
 class WifePlugin(Star):
@@ -257,7 +257,9 @@ class WifePlugin(Star):
             wife_data = cfg.get(uid)
             
             if not wife_data or not isinstance(wife_data, list) or wife_data[1] != today:
-                # 今天还没抽，获取新老婆
+                # 今天还没抽，清理过期的交换请求
+                load_swap_requests()
+                # 获取新老婆
                 img = await self._fetch_wife_image()
                 if not img:
                     yield event.plain_result("抱歉，今天的老婆获取失败了，请稍后再试~")
