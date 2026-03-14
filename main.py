@@ -6,6 +6,7 @@ import os
 import json
 import aiohttp
 import asyncio
+import time
 
 # ==================== 常量定义 ====================
 
@@ -21,6 +22,7 @@ os.makedirs(IMG_DIR, exist_ok=True)
 RECORDS_FILE = os.path.join(CONFIG_DIR, "records.json")
 SWAP_REQUESTS_FILE = os.path.join(CONFIG_DIR, "swap_requests.json")
 NTR_STATUS_FILE = os.path.join(CONFIG_DIR, "ntr_status.json")
+WIFE_LIST_CACHE_FILE = os.path.join(CONFIG_DIR, "wife_list_cache.txt")
 
 # ==================== 全局数据存储 ====================
 
@@ -142,7 +144,7 @@ load_ntr_statuses()
     "astrbot_plugin_animewifex",
     "monbed",
     "群二次元老婆插件修改版",
-    "1.7.4",
+    "1.7.5",
     "https://github.com/monbed/astrbot_plugin_animewifex",
 )
 class WifePlugin(Star):
@@ -282,16 +284,39 @@ class WifePlugin(Star):
         except Exception:
             pass
         
-        # 从网络获取
+        # 读取本地缓存
+        cached_lines = []
+        cache_expired = True
+        if os.path.exists(WIFE_LIST_CACHE_FILE):
+            try:
+                cache_expired = (time.time() - os.path.getmtime(WIFE_LIST_CACHE_FILE)) >= 3600
+                with open(WIFE_LIST_CACHE_FILE, "r", encoding="utf-8") as f:
+                    cached_lines = [l for l in f.read().splitlines() if l.strip()]
+            except Exception:
+                pass
+        
+        # 缓存有效，直接使用
+        if not cache_expired and cached_lines:
+            return random.choice(cached_lines)
+        
+        # 缓存过期或不存在，从网络获取
         try:
             url = self.image_list_url or self.image_base_url
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as resp:
                     if resp.status == 200:
                         text = await resp.text()
-                        return random.choice(text.splitlines())
+                        lines = [l for l in text.splitlines() if l.strip()]
+                        if lines:
+                            with open(WIFE_LIST_CACHE_FILE, "w", encoding="utf-8") as f:
+                                f.write("\n".join(lines))
+                            return random.choice(lines)
         except Exception:
             pass
+        
+        # 网络失败时用过期缓存兜底
+        if cached_lines:
+            return random.choice(cached_lines)
         
         return None
 
