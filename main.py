@@ -1,5 +1,6 @@
 from astrbot.api.all import *
 from astrbot.api.star import StarTools
+from astrbot.api.event import filter
 from datetime import datetime, timedelta
 import random
 import os
@@ -140,13 +141,6 @@ load_ntr_statuses()
 # ==================== 主插件类 ====================
 
 
-@register(
-    "astrbot_plugin_animewifex",
-    "monbed",
-    "群二次元老婆插件修改版",
-    "1.7.5",
-    "https://github.com/monbed/astrbot_plugin_animewifex",
-)
 class WifePlugin(Star):
     """二次元老婆插件主类"""
 
@@ -228,7 +222,7 @@ class WifePlugin(Star):
 
     # ==================== 消息处理 ====================
 
-    @event_message_type(EventMessageType.GROUP_MESSAGE)
+    @filter.event_message_type(EventMessageType.GROUP_MESSAGE)
     async def on_all_messages(self, event: AstrMessageEvent, *args, **kwargs):
         """消息分发处理（仅群聊监听）"""
         if not event.message_obj or not hasattr(event.message_obj, "group_id"):
