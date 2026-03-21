@@ -285,7 +285,7 @@ class WifePlugin(Star):
             try:
                 cache_expired = (time.time() - os.path.getmtime(WIFE_LIST_CACHE_FILE)) >= 3600
                 with open(WIFE_LIST_CACHE_FILE, "r", encoding="utf-8") as f:
-                    cached_lines = [l for l in f.read().splitlines() if l.strip()]
+                    cached_lines = [line for line in f.read().splitlines() if line.strip()]
             except Exception:
                 pass
         
@@ -296,11 +296,12 @@ class WifePlugin(Star):
         # 缓存过期或不存在，从网络获取
         try:
             url = self.image_list_url or self.image_base_url
-            async with aiohttp.ClientSession() as session:
+            timeout = aiohttp.ClientTimeout(total=10)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.get(url) as resp:
                     if resp.status == 200:
                         text = await resp.text()
-                        lines = [l for l in text.splitlines() if l.strip()]
+                        lines = [line for line in text.splitlines() if line.strip()]
                         if lines:
                             with open(WIFE_LIST_CACHE_FILE, "w", encoding="utf-8") as f:
                                 f.write("\n".join(lines))
